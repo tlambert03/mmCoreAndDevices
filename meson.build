@@ -7,19 +7,3 @@ project('mmCoreAndDevices', 'cpp', version : '0.0.1',
 
 subproject('MMDevice')
 subproject('MMCore')
-# having this line not here allows the project
-#to still run if the project is missing. If the project isn't missing then it
-#will still be detected when needed.
-#subproject('3rdPartyPrivate')
-
-# if get_option('MMCOREJ')
-# 	subproject('MMCoreJ_wrap')
-# endif
-
-# if get_option('DEVICE_ADAPTERS')
-# 	subproject('DeviceAdapters')
-# endif
-
-# if get_option('MMCOREPY')
-# 	subproject('MMCorePy_wrap')
-# endif
