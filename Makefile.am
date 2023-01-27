@@ -1,0 +1,11 @@
+AUTOMAKE_OPTIONS = foreign
+ACLOCAL_AMFLAGS = -I m4
+
+if BUILD_ADAPTERS
+ADAPTERS_DIR = DeviceAdapters
+endif
+
+SUBDIRS = \
+	MMDevice \
+	MMCore \
+	$(ADAPTERS_DIR)
