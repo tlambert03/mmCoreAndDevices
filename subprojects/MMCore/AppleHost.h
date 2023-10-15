@@ -9,7 +9,7 @@
                     finding the parent Ethernet controller, and retrieving properties from the
                     controller's I/O Registry entry.
                 
-    Copyright:      © Copyright 2001-2005 Apple Computer, Inc. All rights reserved.
+    Copyright:      ï¿½ Copyright 2001-2005 Apple Computer, Inc. All rights reserved.
     
     Disclaimer:     IMPORTANT:  This Apple software is supplied to you by Apple Computer, Inc.
                     ("Apple") in consideration of your agreement to the following terms, and your
@@ -18,7 +18,7 @@
                     please do not use, install, modify or redistribute this Apple software.
  
                     In consideration of your agreement to abide by the following terms, and subject
-                    to these terms, Apple grants you a personal, non-exclusive license, under Apple’s
+                    to these terms, Apple grants you a personal, non-exclusive license, under Appleï¿½s
                     copyrights in this original Apple software (the "Apple Software"), to use,
                     reproduce, modify and redistribute the Apple Software, with or without
                     modifications, in source and/or binary forms; provided that if you redistribute
@@ -134,7 +134,7 @@ static kern_return_t FindEthernetInterfaces(io_iterator_t *matchingServices)
     // IOServiceGetMatchingServices retains the returned iterator, so release the iterator when we're done with it.
     // IOServiceGetMatchingServices also consumes a reference on the matching dictionary so we don't need to release
     // the dictionary explicitly.
-    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, matchingDict, matchingServices);    
+    kernResult = IOServiceGetMatchingServices(kIOMainPortDefault, matchingDict, matchingServices);    
     if (KERN_SUCCESS != kernResult) {
         printf("IOServiceGetMatchingServices returned 0x%08x\n", kernResult);
     }

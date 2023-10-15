@@ -191,7 +191,7 @@ bool MM::FloatProperty::Get(std::string& strVal) const
 {
    char fmtStr[20];
    char buf[BUFSIZE];
-   sprintf(fmtStr, "%%.%df", decimalPlaces_);
+   snprintf(fmtStr, sizeof(fmtStr), "%%.%df", decimalPlaces_);
    snprintf(buf, BUFSIZE, fmtStr, value_);
    strVal = buf;
    return true;

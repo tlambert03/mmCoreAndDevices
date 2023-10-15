@@ -2387,8 +2387,11 @@ void CMMCore::snapImage() throw (CMMError)
       int ret = DEVICE_OK;
       try {
 
+         #pragma GCC diagnostic push
+         #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
          // wait for all synchronized devices to stop before taking an image
          waitForImageSynchro();
+         #pragma GCC diagnostic pop
 
          // open the shutter
          std::shared_ptr<ShutterInstance> shutter =
@@ -6621,9 +6624,13 @@ void CMMCore::saveSystemConfiguration(const char* fileName) throw (CMMError)
 
    // save equipment
    os << "# Equipment attributes" << endl;
+
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
    vector<string> propBlocks = getAvailablePropertyBlocks();
    for (size_t i=0; i<propBlocks.size(); i++)
    {
+      
       PropertyBlock pb = getPropertyBlockData(propBlocks[i].c_str());
       PropertyPair p;
       for (size_t j=0; j<pb.size(); j++)
@@ -6632,6 +6639,7 @@ void CMMCore::saveSystemConfiguration(const char* fileName) throw (CMMError)
          os << MM::g_CFGCommand_Equipment << ',' << propBlocks[i] << ',' << p.getPropertyName() << ',' << p.getPropertyValue() << endl;
       }
    }
+   #pragma GCC diagnostic pop
 
    // save the pre-initialization properties
    os << "# Pre-initialization properties" << endl;
@@ -7004,7 +7012,11 @@ void CMMCore::loadSystemConfigurationImpl(const char* fileName) throw (CMMError)
                   throw CMMError(getCoreErrorText(MMERR_InvalidCFGEntry) + " (" +
                         ToQuotedString(line) + ")",
                         MMERR_InvalidCFGEntry);
+
+               #pragma GCC diagnostic push
+               #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                definePropertyBlock(tokens[1].c_str(), tokens[2].c_str(), tokens[3].c_str());
+               #pragma GCC diagnostic pop
             }
             else if(tokens[0].compare(MM::g_CFGCommand_ImageSynchro) == 0)
             {
@@ -7014,7 +7026,11 @@ void CMMCore::loadSystemConfigurationImpl(const char* fileName) throw (CMMError)
                   throw CMMError(getCoreErrorText(MMERR_InvalidCFGEntry) + " (" +
                         ToQuotedString(line) + ")",
                         MMERR_InvalidCFGEntry);
+
+               #pragma GCC diagnostic push
+               #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                assignImageSynchro(tokens[1].c_str());
+               #pragma GCC diagnostic pop
             }
             else if(tokens[0].compare(MM::g_CFGCommand_ParentID) == 0)
             {
