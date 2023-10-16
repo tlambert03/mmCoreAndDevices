@@ -10,3 +10,5 @@ project(
 
 subproject('MMDevice')
 subproject('MMCore')
+
+

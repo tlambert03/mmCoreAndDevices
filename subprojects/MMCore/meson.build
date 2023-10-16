@@ -75,8 +75,22 @@ if host_machine.system() == 'windows'
 elif host_machine.system() == 'linux'
 	libdl_dep = cxx.find_library('dl')
 	deps += [libdl_dep]
+elif host_machine.system() == 'darwin'
+    corefoundation_dep = declare_dependency(link_args : ['-framework', 'CoreFoundation'])
+    iokit_dep = declare_dependency(link_args : ['-framework', 'IOKit'])
+    deps += [corefoundation_dep, iokit_dep]
 endif
 
 MMCore_lib = static_library('MMCore', sources, include_directories: includes, dependencies : deps)
 MMCore_dep = declare_dependency(include_directories: includes, link_with: MMCore_lib, dependencies: deps)
 meson.override_dependency('MMCore', MMCore_dep)
+
+
+catch2_dep = dependency('catch2')
+test_exe = executable(
+	'test_name',
+	'unittest/CoreSanity-Tests.cpp',
+	dependencies : catch2_dep,
+	link_with : [MMCore_lib]
+)
+test('test_name', test_exe)
