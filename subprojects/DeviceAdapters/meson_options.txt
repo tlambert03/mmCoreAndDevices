@@ -1,0 +1,1 @@
+option('SearchPattern', type: 'string', value: '*', description: 'Only device adapters matching this regex pattern will be compiled')
