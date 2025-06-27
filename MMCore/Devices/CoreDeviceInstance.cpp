@@ -1,7 +1,7 @@
 // PROJECT:       Micro-Manager
 // SUBSYSTEM:     MMCore
 //
-// COPYRIGHT:     University of California, San Francisco, 2014,
+// COPYRIGHT:     University of California, San Francisco, 2025,
 //                All Rights reserved
 //
 // LICENSE:       This file is distributed under the "Lesser GPL" (LGPL) license.
@@ -14,25 +14,31 @@
 //                IN NO EVENT SHALL THE COPYRIGHT OWNER OR
 //                CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //                INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
-//
-// AUTHOR:        Mark Tsuchida
 
-#pragma once
-
-#include "CameraInstance.h"
-#include "ShutterInstance.h"
-#include "StageInstance.h"
-#include "XYStageInstance.h"
-#include "StateInstance.h"
-#include "SerialInstance.h"
-#include "GenericInstance.h"
-#include "AutoFocusInstance.h"
-#include "ImageProcessorInstance.h"
-#include "SignalIOInstance.h"
-#include "MagnifierInstance.h"
-#include "SLMInstance.h"
-#include "GalvoInstance.h"
-#include "HubInstance.h"
-#include "PressurePumpInstance.h"
-#include "VolumetricPumpInstance.h"
 #include "CoreDeviceInstance.h"
+#include "../MMCore.h"
+
+CoreDeviceInstance::CoreDeviceInstance(CMMCore* core,
+      mm::logging::Logger deviceLogger,
+      mm::logging::Logger coreLogger) :
+   DeviceInstance(core, nullptr, "Core", new CoreDevice(core), 
+                  [](MM::Device* d) { delete d; }, MM::g_Keyword_CoreDevice, 
+                  deviceLogger, coreLogger)
+{
+}
+
+CoreDeviceInstance::~CoreDeviceInstance()
+{
+   // The base class destructor will call the delete function,
+   // which will delete our CoreDevice
+}
+
+MM::DeviceType CoreDeviceInstance::GetType() const
+{
+   return MM::CoreDevice;
+}
+
+std::string CoreDeviceInstance::GetName() const
+{
+   return "Core";
+}

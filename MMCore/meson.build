@@ -46,6 +46,8 @@ mmcore_sources = files(
     'DeviceManager.cpp',
     'Devices/AutoFocusInstance.cpp',
     'Devices/CameraInstance.cpp',
+    'Devices/CoreDevice.cpp',
+    'Devices/CoreDeviceInstance.cpp',
     'Devices/DeviceInstance.cpp',
     'Devices/GalvoInstance.cpp',
     'Devices/HubInstance.cpp',

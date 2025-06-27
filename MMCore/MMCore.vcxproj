@@ -83,6 +83,8 @@
     <ClCompile Include="DeviceManager.cpp" />
     <ClCompile Include="Devices\AutoFocusInstance.cpp" />
     <ClCompile Include="Devices\CameraInstance.cpp" />
+    <ClCompile Include="Devices\CoreDevice.cpp" />
+    <ClCompile Include="Devices\CoreDeviceInstance.cpp" />
     <ClCompile Include="Devices\DeviceInstance.cpp" />
     <ClCompile Include="Devices\GalvoInstance.cpp" />
     <ClCompile Include="Devices\HubInstance.cpp" />
@@ -127,6 +129,8 @@
     <ClInclude Include="DeviceManager.h" />
     <ClInclude Include="Devices\AutoFocusInstance.h" />
     <ClInclude Include="Devices\CameraInstance.h" />
+    <ClInclude Include="Devices\CoreDevice.h" />
+    <ClInclude Include="Devices\CoreDeviceInstance.h" />
     <ClInclude Include="Devices\DeviceInstance.h" />
     <ClInclude Include="Devices\DeviceInstanceBase.h" />
     <ClInclude Include="Devices\DeviceInstances.h" />

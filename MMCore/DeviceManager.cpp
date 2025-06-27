@@ -41,11 +41,9 @@ DeviceManager::LoadDevice(std::shared_ptr<LoadedDeviceAdapter> module,
       mm::logging::Logger deviceLogger,
       mm::logging::Logger coreLogger)
 {
-   // For now, "Core" (which always exists) is not a real-enough device to be
-   // in 'devices_'; check as a special case.
+   // Check for duplicate labels
    if (std::find_if(devices_.begin(), devices_.end(),
-         [&](const auto& p) { return p.first == label; }) != devices_.end() ||
-      label == MM::g_Keyword_CoreDevice)
+         [&](const auto& p) { return p.first == label; }) != devices_.end())
    {
       throw CMMError("The specified device label " + ToQuotedString(label) +
          " is already in use", MMERR_DuplicateLabel);

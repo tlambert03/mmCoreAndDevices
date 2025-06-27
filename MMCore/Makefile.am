@@ -28,6 +28,10 @@ libMMCore_la_SOURCES = \
 	Devices/AutoFocusInstance.h \
 	Devices/CameraInstance.cpp \
 	Devices/CameraInstance.h \
+	Devices/CoreDevice.cpp \
+	Devices/CoreDevice.h \
+	Devices/CoreDeviceInstance.cpp \
+	Devices/CoreDeviceInstance.h \
 	Devices/DeviceInstance.cpp \
 	Devices/DeviceInstance.h \
 	Devices/GenericDeviceInstance.h \

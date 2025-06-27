@@ -50,6 +50,7 @@
 #include "CoreUtils.h"
 #include "DeviceManager.h"
 #include "Devices/DeviceInstances.h"
+#include "Devices/CoreDeviceInstance.h"
 #include "LogManager.h"
 #include "MMCore.h"
 #include "MMEventCallback.h"
@@ -159,6 +160,28 @@ CMMCore::CMMCore() :
    }
 
    CreateCoreProperties();
+   
+   // Create and register the Core device
+   createCoreDevice();
+}
+
+/**
+ * Create and register the Core device in the device manager.
+ * This allows the Core to be treated like any other device for property operations.
+ */
+void CMMCore::createCoreDevice()
+{
+   // Create the CoreDeviceInstance
+   auto coreDeviceInstance = std::make_shared<CoreDeviceInstance>(
+      this,
+      coreLogger_,  // Use core logger as device logger
+      coreLogger_   // Core logger
+   );
+   
+   // Register it directly in the device manager's containers
+   // (CMMCore is a friend of DeviceManager, so we can access private members)
+   deviceManager_->devices_.emplace_back(MM::g_Keyword_CoreDevice, coreDeviceInstance);
+   deviceManager_->deviceRawPtrIndex_[coreDeviceInstance->GetRawPtr()] = coreDeviceInstance;
 }
 
 /**
@@ -1143,9 +1166,6 @@ void CMMCore::updateSystemStateCache()
  */
 MM::DeviceType CMMCore::getDeviceType(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return MM::CoreDevice;
-
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    return pDevice->GetType();
 }
@@ -1156,13 +1176,15 @@ MM::DeviceType CMMCore::getDeviceType(const char* label) throw (CMMError)
  */
 std::string CMMCore::getDeviceLibrary(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return "";
-
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    mm::DeviceModuleLockGuard guard(pDevice);
-   return pDevice->GetAdapterModule()->GetName();
+   std::shared_ptr<LoadedDeviceAdapter> adapter = pDevice->GetAdapterModule();
+   if (!adapter) {
+      // Core device has no adapter module
+      return "";
+   }
+   return adapter->GetName();
 }
 
 /**
@@ -1204,8 +1226,6 @@ void CMMCore::unloadLibrary(const char* moduleName) throw (CMMError)
  */
 std::string CMMCore::getDeviceName(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return "Core";
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    mm::DeviceModuleLockGuard guard(pDevice);
@@ -1217,9 +1237,6 @@ std::string CMMCore::getDeviceName(const char* label) throw (CMMError)
  */
 std::string CMMCore::getParentLabel(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      // XXX Should be a throw
-      return "";
    std::shared_ptr<DeviceInstance> device = deviceManager_->GetDevice(label);
    mm::DeviceModuleLockGuard guard(device);
    return device->GetParentID();
@@ -1230,9 +1247,6 @@ std::string CMMCore::getParentLabel(const char* label) throw (CMMError)
  */
 void CMMCore::setParentLabel(const char* label, const char* parentLabel) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      // XXX Should be a throw
-      return; // core can't have parent ID
    std::shared_ptr<DeviceInstance> pDev = deviceManager_->GetDevice(label);
    if (parentLabel && std::string(parentLabel).empty()) {
       // Empty label is acceptable, meaning no parent
@@ -1254,8 +1268,6 @@ void CMMCore::setParentLabel(const char* label, const char* parentLabel) throw (
  */
 std::string CMMCore::getDeviceDescription(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return "Core device";
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    mm::DeviceModuleLockGuard guard(pDevice);
@@ -1276,8 +1288,6 @@ std::string CMMCore::getDeviceDescription(const char* label) throw (CMMError)
  */
 double CMMCore::getDeviceDelayMs(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return 0.0;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    mm::DeviceModuleLockGuard guard(pDevice);
@@ -1294,8 +1304,6 @@ double CMMCore::getDeviceDelayMs(const char* label) throw (CMMError)
  */
 void CMMCore::setDeviceDelayMs(const char* label, double delayMs) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return; // ignore
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    mm::DeviceModuleLockGuard guard(pDevice);
@@ -1310,8 +1318,6 @@ void CMMCore::setDeviceDelayMs(const char* label, double delayMs) throw (CMMErro
  */
 bool CMMCore::usesDeviceDelay(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return false;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    mm::DeviceModuleLockGuard guard(pDevice);
@@ -1325,8 +1331,6 @@ bool CMMCore::usesDeviceDelay(const char* label) throw (CMMError)
  */
 bool CMMCore::deviceBusy(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return false;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    mm::DeviceModuleLockGuard guard(pDevice);
@@ -1351,8 +1355,6 @@ void CMMCore::sleep(double intervalMs) const
  */
 void CMMCore::waitForDevice(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return; // core property commands always block - no need to poll
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    waitForDevice(pDevice);
@@ -3727,8 +3729,6 @@ void CMMCore::setCameraDevice(const char* cameraLabel) throw (CMMError)
  */
 std::vector<std::string> CMMCore::getDevicePropertyNames(const char* label) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return properties_->GetNames();
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
    {
@@ -3776,9 +3776,6 @@ std::vector<std::string> CMMCore::getLoadedDevicesOfType(MM::DeviceType devType)
  */
 std::vector<std::string> CMMCore::getAllowedPropertyValues(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return properties_->GetAllowedValues(propName);
-
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -3806,8 +3803,6 @@ std::vector<std::string> CMMCore::getAllowedPropertyValues(const char* label, co
  */
 std::string CMMCore::getProperty(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return properties_->Get(propName);
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -3834,8 +3829,6 @@ std::string CMMCore::getProperty(const char* label, const char* propName) throw 
  */
 std::string CMMCore::getPropertyFromCache(const char* label, const char* propName) const throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return properties_->Get(propName);
    CheckDeviceLabel(label);
    CheckPropertyName(propName);
 
@@ -3864,33 +3857,22 @@ void CMMCore::setProperty(const char* label, const char* propName,
    CheckPropertyName(propName);
    CheckPropertyValue(propValue);
 
-   if (IsCoreDeviceLabel(label))
+   LOG_DEBUG(coreLogger_) << "Will set property: " << label << "." <<
+      propName << " = " << propValue;
+
+   std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
+
+   mm::DeviceModuleLockGuard guard(pDevice);
+
+   pDevice->SetProperty(propName, propValue);
+
    {
-      LOG_DEBUG(coreLogger_) << "Will set Core property: " <<
-         propName << " = " << propValue;
-
-      properties_->Execute(propName, propValue);
-      {
-         MMThreadGuard scg(stateCacheLock_);
-         stateCache_.addSetting(PropertySetting(MM::g_Keyword_CoreDevice, propName, propValue));
-      }
-
-      LOG_DEBUG(coreLogger_) << "Did set Core property: " <<
-         propName << " = " << propValue;
+      MMThreadGuard scg(stateCacheLock_);
+      stateCache_.addSetting(PropertySetting(label, propName, propValue));
    }
-   else
-   {
-      std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
 
-      mm::DeviceModuleLockGuard guard(pDevice);
-
-      pDevice->SetProperty(propName, propValue);
-
-      {
-         MMThreadGuard scg(stateCacheLock_);
-         stateCache_.addSetting(PropertySetting(label, propName, propValue));
-      }
-   }
+   LOG_DEBUG(coreLogger_) << "Did set property: " << label << "." <<
+      propName << " = " << propValue;
 }
 
 /**
@@ -3952,8 +3934,6 @@ void CMMCore::setProperty(const char* label, const char* propName,
  */
 bool CMMCore::hasProperty(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return properties_->Has(propName);
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -3970,8 +3950,6 @@ bool CMMCore::hasProperty(const char* label, const char* propName) throw (CMMErr
  */
 bool CMMCore::isPropertyReadOnly(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return properties_->IsReadOnly(propName);
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -3988,8 +3966,6 @@ bool CMMCore::isPropertyReadOnly(const char* label, const char* propName) throw 
  */
 bool CMMCore::isPropertyPreInit(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return false;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4002,8 +3978,6 @@ bool CMMCore::isPropertyPreInit(const char* label, const char* propName) throw (
  */
 double CMMCore::getPropertyLowerLimit(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return 0.0;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4016,8 +3990,6 @@ double CMMCore::getPropertyLowerLimit(const char* label, const char* propName) t
  */
 double CMMCore::getPropertyUpperLimit(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return 0.0;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4032,8 +4004,6 @@ double CMMCore::getPropertyUpperLimit(const char* label, const char* propName) t
  */
 bool CMMCore::hasPropertyLimits(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return false;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4048,8 +4018,6 @@ bool CMMCore::hasPropertyLimits(const char* label, const char* propName) throw (
  */
 bool CMMCore::isPropertySequenceable(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return false;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4065,8 +4033,6 @@ bool CMMCore::isPropertySequenceable(const char* label, const char* propName) th
  */
 long CMMCore::getPropertySequenceMaxLength(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      return 0;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4083,9 +4049,6 @@ long CMMCore::getPropertySequenceMaxLength(const char* label, const char* propNa
  */
 void CMMCore::startPropertySequence(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      // XXX Should be a throw
-      return;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4101,9 +4064,6 @@ void CMMCore::startPropertySequence(const char* label, const char* propName) thr
  */
 void CMMCore::stopPropertySequence(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      // XXX Should be a throw
-      return;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4120,9 +4080,6 @@ void CMMCore::stopPropertySequence(const char* label, const char* propName) thro
  */
 void CMMCore::loadPropertySequence(const char* label, const char* propName, std::vector<std::string> eventSequence) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      // XXX Should be a throw
-      return;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -4145,9 +4102,6 @@ void CMMCore::loadPropertySequence(const char* label, const char* propName, std:
  */
 MM::PropertyType CMMCore::getPropertyType(const char* label, const char* propName) throw (CMMError)
 {
-   if (IsCoreDeviceLabel(label))
-      // TODO: return the proper core type
-      return MM::Undef;
    std::shared_ptr<DeviceInstance> pDevice = deviceManager_->GetDevice(label);
    CheckPropertyName(propName);
 
@@ -8074,13 +8028,6 @@ void CMMCore::CheckConfigPresetName(const char* presetName) throw (CMMError)
       throw CMMError("Configuration preset name " + ToQuotedString(nameString) +
             " contains reserved or invalid characters",
             MMERR_BadConfigName);
-}
-
-bool CMMCore::IsCoreDeviceLabel(const char* label) const throw (CMMError)
-{
-   if (!label)
-      throw CMMError("Null device label", MMERR_NullPointerException);
-   return (strcmp(label, MM::g_Keyword_CoreDevice) == 0);
 }
 
 /**

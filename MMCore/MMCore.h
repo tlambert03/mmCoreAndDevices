@@ -99,6 +99,7 @@ class PixelSizeConfigGroup;
 
 class AutoFocusInstance;
 class CameraInstance;
+class CoreDevice;
 class DeviceInstance;
 class GalvoInstance;
 class ImageProcessorInstance;
@@ -138,6 +139,7 @@ class CMMCore
 {
    friend class CoreCallback;
    friend class CorePropertyCollection;
+   friend class CoreDevice;
 
 public:
    CMMCore();
@@ -735,15 +737,10 @@ private:
 private:
    void InitializeErrorMessages();
    void CreateCoreProperties();
-
-   // Parameter/value validation
-   static void CheckDeviceLabel(const char* label) throw (CMMError);
-   static void CheckPropertyName(const char* propName) throw (CMMError);
-   static void CheckPropertyValue(const char* propValue) throw (CMMError);
-   static void CheckStateLabel(const char* stateLabel) throw (CMMError);
-   static void CheckConfigGroupName(const char* groupName) throw (CMMError);
-   static void CheckConfigPresetName(const char* presetName) throw (CMMError);
-   bool IsCoreDeviceLabel(const char* label) const throw (CMMError);
+   void createCoreDevice();
+   
+   // Access to core properties for CoreDevice
+   CorePropertyCollection* getProperties() const { return properties_; }
 
    void applyConfiguration(const Configuration& config) throw (CMMError);
    int applyProperties(std::vector<PropertySetting>& props, std::string& lastError);

@@ -39,6 +39,8 @@ namespace mm
 
 class DeviceManager /* final */
 {
+   friend class CMMCore; // Allow CMMCore to access private members for core device registration
+   
    // Store devices in an ordered container. We could use a map or hash map to
    // retrieve by name, but the number of devices is so small that it is not
    // known to be worth it.
