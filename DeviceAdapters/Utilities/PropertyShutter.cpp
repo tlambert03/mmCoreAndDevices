@@ -184,8 +184,8 @@ int PropertyShutter::SetOpen(bool open)
          GetCoreCallback()->OnPropertyChanged(targetDevice, targetPropertyName_.c_str(), actualValue);
       }
       
-      // Notify about shutter change
-      GetCoreCallback()->OnShutterOpenChanged(this, open);
+      // note: core will postNotification(notif::ShutterOpenChanged)
+      // we don't have to here
    }
       
    return ret;

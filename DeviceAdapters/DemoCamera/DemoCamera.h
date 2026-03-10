@@ -692,7 +692,8 @@ public:
    {
       state_ = open;
       changedTime_ = GetCurrentMMTime();
-      GetCoreCallback()->OnShutterOpenChanged(this, open);
+      // note: core will postNotification(notif::ShutterOpenChanged)
+      // we don't have to here
       return DEVICE_OK;
    }
    int GetOpen(bool& open)

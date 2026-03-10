@@ -121,8 +121,8 @@ int DAShutter::SetOpen(bool open)
    int ret = DEVICE_OK;
    if (da != 0)
       ret = da->SetGateOpen(open);
-   if (ret == DEVICE_OK)
-      GetCoreCallback()->OnShutterOpenChanged(this, open);
+   // note: core will postNotification(notif::ShutterOpenChanged)
+   // we don't have to here
    return ret;
 }
 

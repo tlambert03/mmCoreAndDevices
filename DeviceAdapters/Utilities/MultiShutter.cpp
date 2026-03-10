@@ -155,7 +155,8 @@ int MultiShutter::SetOpen(bool open)
       }
    }
    open_ = open;
-   GetCoreCallback()->OnShutterOpenChanged(this, open);
+   // note: core will postNotification(notif::ShutterOpenChanged)
+   // we don't have to here
    return DEVICE_OK;
 }
 
